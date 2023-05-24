@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap"
+        rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get, Post, Delete</title>
+    <style>
+        * {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        h2,
+        h3,
+        p {
+            padding: 0;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: 0.9rem;
+            font-weight: unset;
+        }
+
+        p {
+            color: rgba(242, 0, 36);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .productSection {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .productContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-auto-rows: max(100px, auto);
+            gap: 10px;
+            justify-items: center;
+            align-items: center;
+            max-width: calc(4 * 300px + 3 * 10px);
+            grid-auto-flow: dense;
+        }
+
+        .productCard {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #aaa;
+            padding: 1rem;
+            gap: 8px;
+            height: 300px;
+            width: 300px;
+            min-width: 300px;
+            max-width: 100%;
+        }
+
+        .productImage {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .productAdd {
+            cursor: pointer;
+            background-color: #fff;
+            border: 2px solid #ddd;
+            padding: 0.5rem 0.8rem;
+        }
+
+        .productAdd:hover {
+            background-color: #ddd;
+        }
+
+        .productAdd h2 {
+            font-size: 3rem;
+            font-weight: 400;
+        }
+
+        .productAdd h3 {
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .button-delete {
+            background-color: #fff;
+            border: 2px solid #ddd;
+            padding: 0.5rem 0.8rem;
+        }
+
+        .formSubmit {
+            background: #fff;
+            border: 1px solid black;
+            padding: 0.6rem 0.8rem;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modalForm {
+            background-color: #fff;
+            padding: 3rem;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 300px;
+        }
+
+        .inputContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .inputContainer label {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .inputContainer input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .inputContainer input:focus {
+            outline: none;
+            border-color: #f20024;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <section class="modal">
+            <form class="modalForm">
+                <h1>Add product</h2>
+                    <div class="inputContainer">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" name="title" />
+                    </div>
+                    <div class="inputContainer">
+                        <label for="price">Price</label>
+                        <input type="text" id="price" name="price" />
+                    </div>
+                    <div class="inputContainer">
+                        <label for="image">Image</label>
+                        <input type="text" id="image" name="image" />
+                    </div>
+                    <input class="formSubmit" type="submit" value="Add product" />
+            </form>
+        </section>
+        <section class="productSection">
+            <div class="productContainer"></div>
+        </section>
+    </main>
+    <script>
+        const baseUrl = "https://golden-whispering-show.glitch.me";
+        let productList = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            getData();
+            document.querySelector("form").addEventListener("submit", (event) => {
+                event.preventDefault();
+                const title = document.querySelector("#title").value;
+                const price = document.querySelector("#price").value;
+                const image = document.querySelector("#image").value;
+                postData(title, price, image);
+                event.target.reset();
+                document.querySelector(".modal").classList.remove("active");
+
+            });
+
+            document.querySelector(".modal").addEventListener("click", (event) => {
+                if (event.target.classList.contains("modal")) {
+                    document.querySelector(".modal").classList.remove("active");
+                }
+            });
+        });
+
+        class Product {
+            constructor(id, title, price, image) {
+                this.id = id;
+                this.title = title;
+                this.price = price;
+                this.image = image;
+            }
+
+            renderItem({ title, image, price, id }, parent) {
+                const productCard = document.createElement("div");
+                productCard.classList.add("productCard");
+                const productImage = document.createElement("img");
+                productImage.classList.add("productImage");
+                productImage.src = image;
+                productImage.alt = title;
+                const productTitle = document.createElement("h2");
+                productTitle.classList.add("productTitle");
+                productTitle.textContent = title;
+                const productPrice = document.createElement("p");
+                productPrice.classList.add("productPrice");
+                productPrice.textContent = `€${price}`;
+                const button = document.createElement("button");
+                button.classList.add("button-delete");
+                button.textContent = "Delete";
+                productCard.appendChild(productImage);
+                productCard.appendChild(productTitle);
+                productCard.appendChild(productPrice);
+                productCard.appendChild(button);
+                parent.appendChild(productCard);
+                button.addEventListener("click", () => deleteData(id));
+            }
+        }
+
+        class ProductList {
+            constructor() {
+                this.products = [];
+            }
+
+            getItemName(id) {
+                return this.products.find((product) => product.id === id).title;
+            }
+
+            productAdd(product) {
+                this.products.push(product);
+            }
+
+            renderAddButton(productContainer) {
+                const buttonDiv = document.createElement("div");
+                buttonDiv.classList.add("productCard", "productAdd");
+                const text = document.createElement("h3");
+                text.textContent = "Add product";
+                const plus = document.createElement("h2");
+                plus.textContent = "+";
+                buttonDiv.appendChild(plus);
+                buttonDiv.appendChild(text);
+                productContainer.appendChild(buttonDiv);
+                buttonDiv.addEventListener("click", () => {
+                    document.querySelector(".modal").classList.add("active");
+                });
+            }
+
+            renderProducts() {
+                const productContainer = document.querySelector(".productContainer");
+                productContainer.innerHTML = "";
+                this.products.forEach((product) => product.renderItem(product, productContainer));
+                this.renderAddButton(productContainer);
+            }
+        }
+
+        function getData() {
+            fetch(baseUrl)
+                .then((response) => response.json())
+                .then((data) => {
+                    productList = new ProductList();
+                    data.forEach(({ id, title, price, image }) => productList.productAdd(new Product(id, title, price, image)));
+                    productList.renderProducts();
+                    console.log(productList);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }
+
+        function postData(title, price, image) {
+            fetch(baseUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ title, image, price: Number(price) })
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    getData();
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }
+
+        function deleteData(id) {
+            if (confirm(`Are you sure you want to delete ${productList.getItemName(id)}?`)) {
+                fetch(`${baseUrl}/${id}`, {
+                    method: "DELETE",
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log(data);
+                        getData();
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>People</title>
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav>
+                <button data-filter="all">By Users</button>
+                <button data-filter="cars">By Car</button>
+                <button data-filter="genders">By Gender</button>
+                <button data-filter="emails">Get Emails</button>
+            </nav>
+        </header>
+        <div>
+            <aside></aside>
+            <section></section>
+        </div>
+    </main>
+    <script>
+
+        getItems("");
+
+        function getItems(url, type) {
+            fetch("http://localhost:3000/data" + url)
+                .then(response => response.json())
+                .then(data => {
+                    renderItems(data, "users")
+                })
+        }
+
+        function renderItems(data, type) {
+            if (type === "users") {
+                const section = document.querySelector('section');
+                section.innerHTML = "";
+                const ul = document.createElement('ul');
+                ul.innerHTML = data.map(item => `<li>${item.id} ${item.first_name} ${item.last_name}</li>`).join('');
+                section.appendChild(ul);
+                return;
+            } else if (type === "emails") {
+                const section = document.querySelector('section');
+                section.innerHTML = "";
+                const ul = document.createElement('ul');
+                ul.innerHTML = data.map(item => `<li>${item.email}</li>`).join('');
+                section.appendChild(ul);
+                return;
+            }
+        }
+
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.dataset.filter;
+                if(type === "all") getItems("", "all")
+            })
+        })
+
+    </script>
+</body>
+
+</html>

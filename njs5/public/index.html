@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEOPLE</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+        }
+
+        main {
+            display: flex;
+            flex-direction: row;
+            padding: 1rem;
+            justify-content: center;
+        }
+
+        section {
+            flex: 1;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 1rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        form label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        form input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        form button {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #ccc;
+            cursor: pointer;
+        }
+
+        .users {
+            width: 100%;
+            max-width: 600px;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .users ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .users ul li {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .users ul li h2 {
+            margin: 0;
+        }
+
+        .users ul li p {
+            margin: 0;
+        }
+
+        .users ul li.active {
+            background-color: #cfc;
+        }
+
+        .users ul li.inactive {
+            background-color: #fcc;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <section>
+            <form>
+                <!-- form to enter firstName, lastName, email, age -->
+                <label for="firstName">First Name</label>
+                <input type="text" name="firstName" id="firstName" placeholder="First Name">
+                <label for="lastName">Last Name</label>
+                <input type="text" name="lastName" id="lastName" placeholder="Last Name">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" placeholder="Email">
+                <label for="age">Age</label>
+                <input type="number" name="age" id="age" placeholder="Age">
+                <button type="submit">Submit</button>
+            </form>
+        </section>
+        <section class="users">
+        </section>
+    </main>
+    <script>
+        getData();
+
+        function getData() {
+            fetch('http://localhost:3000/api/people')
+                .then(response => response.json())
+                .then(data => renderData(data))
+                .catch(error => console.log(error));
+        }
+
+        function renderData(data) {
+            const usersSection = document.querySelector('.users');
+            usersSection.innerHTML = '';
+            const ul = document.createElement('ul');
+            data.forEach(user => {
+                const li = document.createElement('li');
+                console.log(user);
+                li.classList.add(user.active ? 'active' : 'inactive');
+                const h2 = document.createElement('h2');
+                h2.textContent = `${user.firstName} ${user.lastName}`;
+                const p = document.createElement('p');
+                p.textContent = `Email: ${user.email}`;
+                const p2 = document.createElement('p');
+                p2.textContent = `Age: ${user.age}`;
+                li.appendChild(h2);
+                li.appendChild(p);
+                li.appendChild(p2);
+                ul.appendChild(li);
+            });
+            usersSection.appendChild(ul);
+        }
+
+        document.querySelector("form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const firstName = document.querySelector("#firstName").value;
+            const lastName = document.querySelector("#lastName").value;
+            const email = document.querySelector("#email").value;
+            const age = +document.querySelector("#age").value;
+            const user = {
+                firstName,
+                lastName,
+                email,
+                age
+            };
+            fetch('http://localhost:3000/api/people', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(user)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    renderData(data);
+                })
+                .catch(error => console.log(error));
+        });
+    </script>
+</body>
+
+</html>
