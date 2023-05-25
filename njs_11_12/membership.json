@@ -1,0 +1,27 @@
+[
+    {
+        "name": "Trial",
+        "price": 1.99,
+        "description": "This is a 2 day membership"
+    },
+    {
+        "name": "Bronze",
+        "price": 2.20,
+        "description": "This is a 7 day membership"
+    },
+    {
+        "name": "Silver",
+        "price": 2.99,
+        "description": "This is a 30 day membership"
+    },
+    {
+        "name": "Gold",
+        "price": 6.99,
+        "description": "This is a 90 day membership"
+    },
+    {
+        "name": "Platinum",
+        "price": 14.99,
+        "description": "This is a 365 day membership"
+    }
+]
